@@ -1,12 +1,18 @@
 <?php
+// ==========================================
+// 1. 初始化与数据库连接
+// ==========================================
 session_start();
 include 'db_connect.php';
 
-// 查询 New Releases
+// ==========================================
+// 2. 数据查询逻辑
+// ==========================================
+// A. 查询 New Releases (按出版日期倒序，取前4本)
 $sql_new = "SELECT * FROM books ORDER BY publish_date DESC LIMIT 4";
 $result_new = $conn->query($sql_new);
 
-// 查询 Best Sellers
+// B. 查询 Best Sellers (按销量倒序，取前4本)
 $sql_best = "SELECT * FROM books ORDER BY sales_count DESC LIMIT 4";
 $result_best = $conn->query($sql_best);
 ?>
@@ -18,117 +24,115 @@ $result_best = $conn->query($sql_best);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knowledge Temple - Bookstore</title>
     <style>
-        /* ---- 全局重置 ---- */
+        /* =========================================
+           1. 全局样式 (Global Reset)
+           ========================================= */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #fdfbf5; font-family: "Georgia", "Garamond", serif; color: #4a4a4a; }
         .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        a { text-decoration: none; transition: color 0.3s; }
 
-        /* ---- Header & Nav (已移除缩放特效) ---- */
-        header { 
-            padding-top: 20px; 
-            /* 如果你想让头部固定在顶部但不缩放，保留下面这行；如果想随页面滚动，删掉下面这行 */
-            /* position: sticky; top: 0; z-index: 999; background-color: #fdfbf5; */
-        }
-        
+        /* =========================================
+           2. 头部与导航 (Header & Nav)
+           ========================================= */
+        header { padding-top: 20px; }
+        .header-divider { border: 0; height: 1px; background-color: #e0ddd5; margin-bottom: 20px; }
+
+        /* Logo */
         .logo-section { display: flex; justify-content: center; margin-bottom: 20px; }
         .logo-img { height: 60px; display: block; }
-        .header-divider { border: 0; height: 1px; background-color: #e0ddd5; margin-bottom: 20px; }
-        
+
+        /* 导航条布局 */
         .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 30px 0; }
+        
+        /* 中间菜单 */
         .nav-links { display: flex; gap: 60px; flex: 1; justify-content: center; padding-left: 150px; }
-        .nav-links a { text-decoration: none; color: #666; font-size: 16px; font-weight: 500; transition: color 0.3s; }
+        .nav-links a { color: #666; font-size: 16px; font-weight: 500; }
         .nav-links a.active, .nav-links a:hover { color: #c83a3a; }
-        
+
+        /* 右侧工具栏 */
         .nav-tools { display: flex; align-items: center; gap: 20px; }
-        
-        /* 搜索框样式优化 */
-        .search-box { 
-            display: flex; 
-            align-items: center; 
-            border-bottom: 1px solid #dcdcdc; 
-            padding-bottom: 5px; 
-        }
-        .search-box input { 
-            border: none; 
-            background: transparent; 
-            outline: none; 
-            color: #666; 
-            width: 160px; /* 稍微加宽 */
-            font-family: inherit; 
-        }
-        .search-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            padding: 0;
-        }
+
+        /* 搜索框 */
+        .search-box { display: flex; align-items: center; border-bottom: 1px solid #dcdcdc; padding-bottom: 5px; }
+        .search-box input { border: none; background: transparent; outline: none; color: #666; width: 160px; font-family: inherit; }
+        .search-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; padding: 0; }
         .search-btn:hover svg { fill: #c83a3a; }
 
+        /* 用户菜单 */
+        .user-menu { font-family: Arial, sans-serif; font-size: 14px; color: #666; display: flex; align-items: center; gap: 10px; }
+        .login-btn, .logout-btn { color: #4a4a4a; font-weight: bold; }
+        .login-btn:hover, .logout-btn:hover { color: #c83a3a; }
+
+        /* 购物车图标 */
         .cart-icon-wrapper { position: relative; cursor: pointer; display: flex; align-items: center; }
         .cart-img { width: 24px; height: 24px; display: block; }
         .badge { position: absolute; top: -8px; right: -8px; background-color: #c83a3a; color: white; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-family: Arial, sans-serif; }
-        
-        .user-menu { font-family: Arial, sans-serif; font-size: 14px; color: #666; display: flex; align-items: center; gap: 10px; }
-        .login-btn { text-decoration: none; color: #4a4a4a; font-weight: bold; transition: color 0.3s; }
-        .login-btn:hover { color: #c83a3a; }
-        .logout-btn { text-decoration: none; color: #c83a3a; font-size: 12px; border: 1px solid #c83a3a; padding: 2px 8px; border-radius: 4px; transition: all 0.3s; }
-        .logout-btn:hover { background-color: #c83a3a; color: white; }
 
-        /* ---- Banner ---- */
+        /* =========================================
+           3. 横幅与区块 (Banner & Sections)
+           ========================================= */
         .banner-section { width: 100%; margin-top: 10px; display: flex; justify-content: center; }
         .banner-img { width: 100%; height: auto; display: block; }
         .banner-divider { border: 0; height: 1px; background-color: #d1cdc0; margin: 30px 0; }
 
-        /* ---- Content Sections ---- */
         .content-section { padding: 30px 0 60px 0; text-align: left; }
         .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
         .section-title { color: #4a3f35; font-size: 28px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
         .section-divider { border: 0; height: 1px; background-color: #e0ddd5; margin: 0; }
-        .view-all-btn { display: inline-block; background-color: #c83a3a; color: white; text-decoration: none; padding: 8px 20px; font-size: 12px; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px; transition: background-color 0.3s; }
+        
+        .view-all-btn { display: inline-block; background-color: #c83a3a; color: white; padding: 8px 20px; font-size: 12px; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; }
         .view-all-btn:hover { background-color: #a62e2e; }
 
-        /* ---- Book Grid & Cards ---- */
+        /* =========================================
+           4. 书籍网格与卡片 (Book Grid)
+           ========================================= */
         .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; }
+        
         .book-card { position: relative; background-color: #ffffff; padding: 15px; border: 1px solid #efece5; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
         
-        .book-cover { 
-            width: 100%; 
-            height: 200px; 
-            object-fit: cover; 
-            margin-bottom: 15px; 
-            background-color: #f0f0f0; 
-        }
-        
+        .book-cover { width: 100%; height: 200px; object-fit: cover; margin-bottom: 15px; background-color: #f0f0f0; }
         .book-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .book-author { font-size: 13px; color: #888; font-style: italic; margin-bottom: 10px; }
         .book-price { font-size: 16px; color: #c83a3a; font-weight: bold; font-family: Arial, sans-serif; }
+
+        /* 标签 (New / Hot) */
         .tag { position: absolute; top: 10px; left: 10px; padding: 4px 10px; color: white; font-size: 10px; font-weight: bold; border-radius: 4px; z-index: 10; }
         .tag-new { background-color: #4CAF50; } 
         .tag-hot { background-color: #FF5722; } 
 
-        /* ---- Modal (Popup) Styles ---- */
+        /* =========================================
+           5. 弹窗样式 (Modal)
+           ========================================= */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; width: 90%; max-width: 800px; padding: 30px; z-index: 1001; border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); display: flex; gap: 30px; align-items: flex-start; }
-        .hidden { display: none !important; } .visible { display: flex !important; } .visible-block { display: block !important; }
+        
+        .hidden { display: none !important; } 
+        .visible { display: flex !important; } 
+        .visible-block { display: block !important; }
+
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; transition: color 0.3s; }
         .close-btn:hover { color: #c83a3a; }
+
+        /* 弹窗布局 */
         .modal-left { flex: 1; }
         .modal-right { flex: 1.5; display: flex; flex-direction: column; }
         .modal-img { width: 100%; height: auto; object-fit: cover; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
         .modal-title { font-size: 26px; color: #4a3f35; margin-bottom: 5px; }
         .modal-author { font-size: 16px; color: #888; font-style: italic; margin-bottom: 15px; }
+        .modal-price { font-size: 24px; color: #c83a3a; font-weight: bold; margin-bottom: 15px; }
         
+        /* 详细信息网格 */
         .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; color: #555; background-color: #f9f8f4; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #efece5; }
         .meta-item strong { color: #4a3f35; display: block; margin-bottom: 2px; }
 
-        .modal-price { font-size: 24px; color: #c83a3a; font-weight: bold; margin-bottom: 15px; }
         .modal-desc { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 25px; max-height: 120px; overflow-y: auto; padding-right: 5px; }
         .modal-desc::-webkit-scrollbar { width: 5px; }
         .modal-desc::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
 
+        /* 按钮组 */
         .modal-actions { display: flex; gap: 15px; margin-top: auto; }
         .btn-buy, .btn-cart { flex: 1; padding: 12px 0; text-align: center; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.3s; border: none; }
         .btn-buy { background-color: #c83a3a; color: white; }
@@ -136,7 +140,8 @@ $result_best = $conn->query($sql_best);
         .btn-cart { background-color: transparent; border: 2px solid #c83a3a; color: #c83a3a; }
         .btn-cart:hover { background-color: #c83a3a; color: white; }
 
-        @media (max-width: 768px) { .modal { flex-direction: column; width: 95%; height: 80vh; overflow-y: scroll; } .modal-img { height: 200px; } .meta-grid { grid-template-columns: 1fr; } }
+        /* 响应式适配 */
+        @media (max-width: 768px) { .modal { flex-direction: column; width: 95%; height: 80vh; overflow-y: scroll; } .modal-img { height: 200px; } }
     </style>
 </head>
 <body>
@@ -174,9 +179,11 @@ $result_best = $conn->query($sql_best);
                         <?php endif; ?>
                     </div>
                     
-                    <div class="cart-icon-wrapper">
+                    <div class="cart-icon-wrapper" onclick="window.location.href='cart.php'">
                         <img src="./IMG/cart.png" alt="Cart" class="cart-img">
-                        <div class="badge">0</div>
+                        <div class="badge" id="cart-badge">
+                            <?php echo isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,7 +193,10 @@ $result_best = $conn->query($sql_best);
         <hr class="banner-divider">
 
         <section class="content-section">
-            <div class="section-header"><h2 class="section-title">New Releases</h2><a href="shopping.php" class="view-all-btn">View All</a></div>
+            <div class="section-header">
+                <h2 class="section-title">New Releases</h2>
+                <a href="shopping.php?type=new" class="view-all-btn">View All</a>
+            </div>
             <div class="book-grid">
                 <?php 
                 if ($result_new->num_rows > 0) {
@@ -222,7 +232,10 @@ $result_best = $conn->query($sql_best);
         <hr class="section-divider">
 
         <section class="content-section">
-            <div class="section-header"><h2 class="section-title">Best Sellers</h2><a href="shopping.php" class="view-all-btn">View All</a></div>
+            <div class="section-header">
+                <h2 class="section-title">Best Sellers</h2>
+                <a href="shopping.php?type=hot" class="view-all-btn">View All</a>
+            </div>
             <div class="book-grid">
                 <?php 
                 if ($result_best->num_rows > 0) {
@@ -276,35 +289,33 @@ $result_best = $conn->query($sql_best);
             <p id="m-price" class="modal-price">$0.00</p>
             <div class="modal-desc"><p id="m-desc">Description...</p></div>
             <div class="modal-actions">
-                <button class="btn-buy" onclick="alert('Proceed to Checkout')">Buy Now</button>
+                <button class="btn-buy" onclick="buyNow()">Buy Now</button>
                 <button class="btn-cart" onclick="addToCart()">Add to Cart</button>
             </div>
         </div>
     </div>
 
     <script>
-        function openModal(element) {
-            // 获取所有数据
-            const title = element.getAttribute('data-title');
-            const author = element.getAttribute('data-author');
-            const price = element.getAttribute('data-price');
-            const image = element.getAttribute('data-image');
-            const desc = element.getAttribute('data-desc');
-            const publisher = element.getAttribute('data-publisher');
-            const date = element.getAttribute('data-date');
-            const isbn = element.getAttribute('data-isbn');
-            const category = element.getAttribute('data-category');
+        var currentBookId = 0; // 全局变量，记录当前弹窗的书本ID
 
-            // 填充到页面元素
-            document.getElementById('m-title').innerText = title;
-            document.getElementById('m-author').innerText = author;
-            document.getElementById('m-price').innerText = '$' + price;
-            document.getElementById('m-image').src = image;
-            document.getElementById('m-desc').innerText = desc;
-            document.getElementById('m-publisher').innerText = publisher;
-            document.getElementById('m-date').innerText = date;
-            document.getElementById('m-isbn').innerText = isbn;
-            document.getElementById('m-category').innerText = category;
+        // 打开弹窗并填充数据
+        function openModal(element) {
+            currentBookId = element.getAttribute('data-id');
+
+            // 填充文本数据
+            document.getElementById('m-title').innerText = element.getAttribute('data-title');
+            document.getElementById('m-author').innerText = element.getAttribute('data-author');
+            document.getElementById('m-price').innerText = '$' + element.getAttribute('data-price');
+            document.getElementById('m-desc').innerText = element.getAttribute('data-desc');
+            
+            // 填充元数据
+            document.getElementById('m-publisher').innerText = element.getAttribute('data-publisher');
+            document.getElementById('m-date').innerText = element.getAttribute('data-date');
+            document.getElementById('m-isbn').innerText = element.getAttribute('data-isbn');
+            document.getElementById('m-category').innerText = element.getAttribute('data-category');
+            
+            // 填充图片
+            document.getElementById('m-image').src = element.getAttribute('data-image');
 
             // 显示
             document.getElementById('modalOverlay').classList.remove('hidden');
@@ -313,6 +324,7 @@ $result_best = $conn->query($sql_best);
             document.getElementById('productModal').classList.add('visible');
         }
 
+        // 关闭弹窗
         function closeModal() {
             document.getElementById('modalOverlay').classList.add('hidden');
             document.getElementById('modalOverlay').classList.remove('visible-block');
@@ -320,11 +332,48 @@ $result_best = $conn->query($sql_best);
             document.getElementById('productModal').classList.remove('visible');
         }
 
+        // 加入购物车 (AJAX)
         function addToCart() {
-            alert("Added to cart!");
+            if(currentBookId == 0) return;
+
+            var formData = new FormData();
+            formData.append('book_id', currentBookId);
+
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('cart-badge').innerText = data.total;
+                    alert("Book added to cart!");
+                    closeModal();
+                } else {
+                    alert("Error adding to cart.");
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
 
-        // [注意] 移除了原有的 scroll 事件监听，头部现在保持静止
+        // 立即购买
+        function buyNow() {
+            if(currentBookId == 0) return;
+
+            var formData = new FormData();
+            formData.append('book_id', currentBookId);
+
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    window.location.href = 'cart.php';
+                }
+            });
+        }
     </script>
 </body>
 </html>

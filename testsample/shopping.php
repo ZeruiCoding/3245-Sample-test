@@ -9,15 +9,14 @@ $cat_sql = "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND c
 $cat_result = $conn->query($cat_sql);
 
 // ==========================================
-// 2. 处理筛选逻辑
+// 2. 处理筛选与搜索逻辑
 // ==========================================
-// 初始化查询条件
 $where_clauses = [];
 $order_by = "ORDER BY id DESC"; // 默认排序
 $page_title = "All Books";
-$current_filter = ""; // 用于前端高亮显示当前选中的菜单
+$current_filter = "";
 
-// A. 搜索功能 (优先级最高)
+// A. 搜索功能
 if (isset($_GET['q']) && !empty($_GET['q'])) {
     $search_key = $conn->real_escape_string($_GET['q']);
     $where_clauses[] = "(title LIKE '%$search_key%' OR author LIKE '%$search_key%' OR isbn LIKE '%$search_key%')";
@@ -28,12 +27,10 @@ if (isset($_GET['q']) && !empty($_GET['q'])) {
 elseif (isset($_GET['type'])) {
     $type = $_GET['type'];
     if ($type == 'new') {
-        // 筛选最近 30 天出版的书
         $where_clauses[] = "publish_date > DATE_SUB(NOW(), INTERVAL 30 DAY)";
         $page_title = "New Releases";
         $current_filter = "new";
     } elseif ($type == 'hot') {
-        // 筛选销量大于 1000 的书，并按销量排序
         $where_clauses[] = "sales_count > 1000";
         $order_by = "ORDER BY sales_count DESC";
         $page_title = "Best Sellers";
@@ -45,22 +42,17 @@ elseif (isset($_GET['category'])) {
     $cat = $conn->real_escape_string($_GET['category']);
     $where_clauses[] = "category = '$cat'";
     $page_title = "Category: " . htmlspecialchars($cat);
-    $current_filter = $cat; // 用于高亮分类
+    $current_filter = $cat;
 }
 
 // ==========================================
-// 3. 构建最终 SQL
+// 3. 构建并执行查询
 // ==========================================
 $sql = "SELECT * FROM books";
-
-// 如果有筛选条件，拼接 WHERE
 if (count($where_clauses) > 0) {
     $sql .= " WHERE " . implode(' AND ', $where_clauses);
 }
-
-// 拼接排序
 $sql .= " " . $order_by;
-
 $result = $conn->query($sql);
 ?>
 
@@ -71,76 +63,59 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop - Knowledge Temple</title>
     <style>
-        /* 复用并扩展样式 */
+        /* =========================================
+           1. 基础样式 (复用 Homepage)
+           ========================================= */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #fdfbf5; font-family: "Georgia", "Garamond", serif; color: #4a4a4a; }
         .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        a { text-decoration: none; transition: color 0.3s; }
 
-        /* Header & Nav */
+        /* =========================================
+           2. 头部与导航
+           ========================================= */
         header { padding-top: 20px; }
+        .header-divider { border: 0; height: 1px; background-color: #e0ddd5; margin-bottom: 20px; }
         .logo-section { display: flex; justify-content: center; margin-bottom: 20px; }
         .logo-img { height: 60px; display: block; }
-        .header-divider { border: 0; height: 1px; background-color: #e0ddd5; margin-bottom: 20px; }
+
         .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 30px 0; }
         .nav-links { display: flex; gap: 60px; flex: 1; justify-content: center; padding-left: 150px; }
-        .nav-links a { text-decoration: none; color: #666; font-size: 16px; font-weight: 500; transition: color 0.3s; }
+        .nav-links a { color: #666; font-size: 16px; font-weight: 500; }
         .nav-links a.active, .nav-links a:hover { color: #c83a3a; }
+
         .nav-tools { display: flex; align-items: center; gap: 20px; }
         
         .search-box { display: flex; align-items: center; border-bottom: 1px solid #dcdcdc; padding-bottom: 5px; }
         .search-box input { border: none; background: transparent; outline: none; color: #666; width: 160px; font-family: inherit; }
         .search-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; padding: 0; }
         .search-btn:hover svg { fill: #c83a3a; }
+
+        .user-menu { font-family: Arial, sans-serif; font-size: 14px; color: #666; display: flex; align-items: center; gap: 10px; }
+        .login-btn, .logout-btn { color: #4a4a4a; font-weight: bold; }
+        .login-btn:hover, .logout-btn:hover { color: #c83a3a; }
+
         .cart-icon-wrapper { position: relative; cursor: pointer; display: flex; align-items: center; }
         .cart-img { width: 24px; height: 24px; display: block; }
         .badge { position: absolute; top: -8px; right: -8px; background-color: #c83a3a; color: white; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-family: Arial, sans-serif; }
-        .user-menu { font-family: Arial, sans-serif; font-size: 14px; color: #666; display: flex; align-items: center; gap: 10px; }
-        .login-btn, .logout-btn { text-decoration: none; color: #4a4a4a; font-weight: bold; }
-        .login-btn:hover, .logout-btn:hover { color: #c83a3a; }
         
         .section-divider { border: 0; height: 1px; background-color: #e0ddd5; margin: 0; }
 
         /* =========================================
-           [新增] 左右分栏布局样式
+           3. 购物页布局 (左右分栏)
            ========================================= */
-        .shop-layout {
-            display: flex;
-            margin-top: 40px;
-            gap: 40px;
-            margin-bottom: 60px;
-        }
+        .shop-layout { display: flex; margin-top: 40px; gap: 40px; margin-bottom: 60px; }
 
         /* 左侧侧边栏 */
-        .sidebar {
-            width: 250px;
-            flex-shrink: 0; /* 防止被压缩 */
-            padding-right: 20px;
-            border-right: 1px solid #efece5;
-        }
-
+        .sidebar { width: 250px; flex-shrink: 0; padding-right: 20px; border-right: 1px solid #efece5; }
         .filter-group { margin-bottom: 30px; }
         .filter-title { font-size: 18px; font-weight: bold; color: #4a3f35; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .filter-list { list-style: none; }
         .filter-list li { margin-bottom: 10px; }
         
-        .filter-link {
-            text-decoration: none;
-            color: #666;
-            font-size: 15px;
-            transition: color 0.2s;
-            display: block;
-            padding: 5px 0;
-        }
-        .filter-link:hover { color: #c83a3a; padding-left: 5px; } /* Hover 动效 */
-        
-        /* 选中状态 */
-        .filter-link.active {
-            color: #c83a3a;
-            font-weight: bold;
-            padding-left: 5px;
-            border-left: 3px solid #c83a3a;
-            padding-left: 10px;
-        }
+        .filter-link { color: #666; font-size: 15px; display: block; padding: 5px 0; }
+        .filter-link:hover { color: #c83a3a; padding-left: 5px; }
+        .filter-link.active { color: #c83a3a; font-weight: bold; padding-left: 10px; border-left: 3px solid #c83a3a; }
 
         /* 右侧商品区 */
         .product-area { flex: 1; }
@@ -148,8 +123,9 @@ $result = $conn->query($sql);
         .page-title { font-size: 28px; color: #4a3f35; }
         .result-count { color: #888; font-size: 14px; }
 
-        /* 书本网格 (复用) */
+        /* 书籍网格与卡片 */
         .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; }
+        
         .book-card { position: relative; background-color: #ffffff; padding: 15px; border: 1px solid #efece5; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
         .book-cover { width: 100%; height: 200px; object-fit: cover; margin-bottom: 15px; background-color: #f0f0f0; }
@@ -161,12 +137,16 @@ $result = $conn->query($sql);
         .tag-new { background-color: #4CAF50; } 
         .tag-hot { background-color: #FF5722; } 
 
-        /* Modal Styles */
+        /* =========================================
+           4. 弹窗样式 (Modal)
+           ========================================= */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; width: 90%; max-width: 800px; padding: 30px; z-index: 1001; border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); display: flex; gap: 30px; align-items: flex-start; }
+        
         .hidden { display: none !important; } .visible { display: flex !important; } .visible-block { display: block !important; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; transition: color 0.3s; }
         .close-btn:hover { color: #c83a3a; }
+        
         .modal-left { flex: 1; }
         .modal-right { flex: 1.5; display: flex; flex-direction: column; }
         .modal-img { width: 100%; height: auto; object-fit: cover; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -217,7 +197,12 @@ $result = $conn->query($sql);
                             <a href="login.php" class="login-btn">Login</a>
                         <?php endif; ?>
                     </div>
-                    <div class="cart-icon-wrapper"><img src="./IMG/cart.png" alt="Cart" class="cart-img"><div class="badge">0</div></div>
+                    <div class="cart-icon-wrapper" onclick="window.location.href='cart.php'">
+                        <img src="./IMG/cart.png" alt="Cart" class="cart-img">
+                        <div class="badge" id="cart-badge">
+                            <?php echo isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -227,19 +212,12 @@ $result = $conn->query($sql);
         <div class="shop-layout">
             
             <aside class="sidebar">
-                
                 <div class="filter-group">
                     <h3 class="filter-title">Collections</h3>
                     <ul class="filter-list">
-                        <li>
-                            <a href="shopping.php" class="filter-link <?php echo ($current_filter == '') ? 'active' : ''; ?>">All Books</a>
-                        </li>
-                        <li>
-                            <a href="shopping.php?type=new" class="filter-link <?php echo ($current_filter == 'new') ? 'active' : ''; ?>">New Releases</a>
-                        </li>
-                        <li>
-                            <a href="shopping.php?type=hot" class="filter-link <?php echo ($current_filter == 'hot') ? 'active' : ''; ?>">Best Sellers</a>
-                        </li>
+                        <li><a href="shopping.php" class="filter-link <?php echo ($current_filter == '') ? 'active' : ''; ?>">All Books</a></li>
+                        <li><a href="shopping.php?type=new" class="filter-link <?php echo ($current_filter == 'new') ? 'active' : ''; ?>">New Releases</a></li>
+                        <li><a href="shopping.php?type=hot" class="filter-link <?php echo ($current_filter == 'hot') ? 'active' : ''; ?>">Best Sellers</a></li>
                     </ul>
                 </div>
 
@@ -259,11 +237,9 @@ $result = $conn->query($sql);
                         ?>
                     </ul>
                 </div>
-
             </aside>
 
             <main class="product-area">
-                
                 <div class="page-header">
                     <h1 class="page-title"><?php echo $page_title; ?></h1>
                     <span class="result-count">
@@ -278,14 +254,12 @@ $result = $conn->query($sql);
                     <?php 
                     if ($result->num_rows > 0) {
                         while($row = $result->fetch_assoc()) {
-                            // 数据准备
                             $desc = isset($row['description']) ? htmlspecialchars($row['description']) : "No description.";
                             $pub = isset($row['publisher']) ? htmlspecialchars($row['publisher']) : "Unknown";
                             $isbn = isset($row['isbn']) ? htmlspecialchars($row['isbn']) : "N/A";
                             $cat = isset($row['category']) ? htmlspecialchars($row['category']) : "General";
                             $date = isset($row['publish_date']) ? htmlspecialchars($row['publish_date']) : "N/A";
 
-                            // 标签逻辑
                             $is_new = (strtotime($row['publish_date']) > strtotime('-30 days'));
                             $is_hot = ($row['sales_count'] > 1000);
                     ?>
@@ -312,7 +286,6 @@ $result = $conn->query($sql);
                     </div>
                     <?php } } else { echo "<p style='width:100%; color:#888;'>No books found.</p>"; } ?>
                 </div>
-
             </main>
         </div>
     </div>
@@ -335,33 +308,27 @@ $result = $conn->query($sql);
             <p id="m-price" class="modal-price">$0.00</p>
             <div class="modal-desc"><p id="m-desc">Description...</p></div>
             <div class="modal-actions">
-                <button class="btn-buy" onclick="alert('Proceed to Checkout')">Buy Now</button>
+                <button class="btn-buy" onclick="buyNow()">Buy Now</button>
                 <button class="btn-cart" onclick="addToCart()">Add to Cart</button>
             </div>
         </div>
     </div>
 
     <script>
-        function openModal(element) {
-            const title = element.getAttribute('data-title');
-            const author = element.getAttribute('data-author');
-            const price = element.getAttribute('data-price');
-            const image = element.getAttribute('data-image');
-            const desc = element.getAttribute('data-desc');
-            const publisher = element.getAttribute('data-publisher');
-            const date = element.getAttribute('data-date');
-            const isbn = element.getAttribute('data-isbn');
-            const category = element.getAttribute('data-category');
+        var currentBookId = 0;
 
-            document.getElementById('m-title').innerText = title;
-            document.getElementById('m-author').innerText = author;
-            document.getElementById('m-price').innerText = '$' + price;
-            document.getElementById('m-image').src = image;
-            document.getElementById('m-desc').innerText = desc;
-            document.getElementById('m-publisher').innerText = publisher;
-            document.getElementById('m-date').innerText = date;
-            document.getElementById('m-isbn').innerText = isbn;
-            document.getElementById('m-category').innerText = category;
+        function openModal(element) {
+            currentBookId = element.getAttribute('data-id');
+
+            document.getElementById('m-title').innerText = element.getAttribute('data-title');
+            document.getElementById('m-author').innerText = element.getAttribute('data-author');
+            document.getElementById('m-price').innerText = '$' + element.getAttribute('data-price');
+            document.getElementById('m-desc').innerText = element.getAttribute('data-desc');
+            document.getElementById('m-publisher').innerText = element.getAttribute('data-publisher');
+            document.getElementById('m-date').innerText = element.getAttribute('data-date');
+            document.getElementById('m-isbn').innerText = element.getAttribute('data-isbn');
+            document.getElementById('m-category').innerText = element.getAttribute('data-category');
+            document.getElementById('m-image').src = element.getAttribute('data-image');
 
             document.getElementById('modalOverlay').classList.remove('hidden');
             document.getElementById('modalOverlay').classList.add('visible-block');
@@ -376,7 +343,32 @@ $result = $conn->query($sql);
             document.getElementById('productModal').classList.remove('visible');
         }
 
-        function addToCart() { alert("Added to cart!"); }
+        function addToCart() {
+            if(currentBookId == 0) return;
+            var formData = new FormData();
+            formData.append('book_id', currentBookId);
+            fetch('add_to_cart.php', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('cart-badge').innerText = data.total;
+                    alert("Book added to cart!");
+                    closeModal();
+                } else { alert("Error adding to cart."); }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function buyNow() {
+            if(currentBookId == 0) return;
+            var formData = new FormData();
+            formData.append('book_id', currentBookId);
+            fetch('add_to_cart.php', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') { window.location.href = 'cart.php'; }
+            });
+        }
     </script>
 </body>
 </html>
