@@ -1,0 +1,66 @@
+body {
+    background-color: #fdfbf5;
+    font-family: "Georgia", serif;
+    color: #4a4a4a;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-card {
+    background: white;
+    padding: 60px 40px;
+    text-align: center;
+    border: 1px solid #efece5;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    max-width: 500px;
+    width: 90%;
+    border-radius: 8px;
+}
+
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    background-color: #d4edda;
+    color: #155724;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 30px auto;
+}
+
+.icon-circle svg {
+    width: 40px;
+    height: 40px;
+    fill: currentColor;
+}
+
+h1 {
+    color: #4a3f35;
+    font-size: 32px;
+    margin-bottom: 15px;
+}
+
+p {
+    color: #666;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #c83a3a;
+    color: white;
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background-color: #a62e2e;
+}
