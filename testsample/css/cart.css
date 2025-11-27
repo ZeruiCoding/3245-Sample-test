@@ -1,0 +1,152 @@
+/* =========================================
+   Cart Page Styles
+   ========================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #fdfbf5;
+    font-family: "Georgia", serif;
+    color: #4a4a4a;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header 样式 (简化版) */
+header {
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0ddd5;
+}
+
+.logo-img {
+    height: 50px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #666;
+    margin-left: 20px;
+}
+
+.nav-links a:hover {
+    color: #c83a3a;
+}
+
+/* 购物车表格样式 */
+.cart-title {
+    margin: 30px 0;
+    font-size: 28px;
+    color: #4a3f35;
+}
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.cart-table th,
+.cart-table td {
+    padding: 20px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-table th {
+    background-color: #f9f8f4;
+    color: #4a3f35;
+    font-weight: bold;
+}
+
+.product-col {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cart-img {
+    width: 60px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.cart-book-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.price-col {
+    color: #c83a3a;
+    font-weight: bold;
+    font-family: Arial;
+}
+
+.total-price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #c83a3a;
+    text-align: right;
+    margin-top: 20px;
+}
+
+.actions {
+    text-align: right;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-continue {
+    background: #eee;
+    color: #666;
+    margin-right: 10px;
+}
+
+.btn-checkout {
+    background: #c83a3a;
+    color: white;
+}
+
+.btn-checkout:hover {
+    background-color: #a62e2e;
+}
+
+/* 空购物车提示 */
+.empty-cart {
+    text-align: center;
+    padding: 50px;
+    color: #888;
+}
+
+.remove-link {
+    color: #999;
+    font-size: 12px;
+    text-decoration: underline;
+    margin-left: 10px;
+}
+
+.remove-link:hover {
+    color: red;
+}
