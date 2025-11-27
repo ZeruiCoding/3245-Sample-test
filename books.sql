@@ -54,4 +54,5 @@ INSERT INTO books (id, title, author, parent_category, category, price, cover_im
 (34, 'Italian for Beginners', 'Luigi Rossi', 'Languages', 'Italian', 24.50, 'allknow.png', 'A comprehensive guide to learning the Italian language and culture.', '2023-09-15', 120, 'Rome Learning', '978-88-544-1234-1', NULL),
 (35, 'Spanish Grammar in Use', 'Maria Garcia', 'Languages', 'Spanish', 30.00, 'allknow.png', 'The ultimate reference book for Spanish grammar mastery.', '2021-06-20', 2500, 'Madrid Press', '978-84-376-5678-9', NULL),
 (36, 'Read & Write Thai', 'Somchai Jai', 'Languages', 'Thai', 19.99, 'allknow.png', 'Learn the Thai script and basic conversation skills.', '2024-01-10', 85, 'Bangkok Books', '978-616-18-9012-3', NULL),
+
 (37, 'French Patisserie', 'Pierre Hermé', 'Languages', 'French', 40.00, 'allknow.png', 'Discover the art of French baking with delicious recipes.', '2025-11-20', 45, 'Paris Culinary', '978-2-08-020345-6', NULL);
