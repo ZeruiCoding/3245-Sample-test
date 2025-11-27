@@ -77,7 +77,7 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
                 // 动态图片处理
                 $img_file = !empty($row['cover_image']) ? $row['cover_image'] : 'allknow.png';
-                $img_src = "../IMG/" . htmlspecialchars($img_file);
+                $img_src = "../IMG/bookimg/" . htmlspecialchars($img_file);
             ?>
             <tr>
                 <td>

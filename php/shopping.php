@@ -183,7 +183,7 @@ $result = $conn->query($sql);
                     <?php if ($result->num_rows > 0) { while($row = $result->fetch_assoc()) {
                         // 动态图片 & 标签逻辑同首页
                         $img_file = !empty($row['cover_image']) ? $row['cover_image'] : 'allknow.png';
-                        $img_src = "../IMG/" . htmlspecialchars($img_file);
+                        $img_src = "../IMG/bookimg/" . htmlspecialchars($img_file);
                         $desc = isset($row['description']) ? htmlspecialchars($row['description']) : "No description.";
                         $pub = isset($row['publisher']) ? htmlspecialchars($row['publisher']) : "Unknown";
                         $isbn = isset($row['isbn']) ? htmlspecialchars($row['isbn']) : "N/A";

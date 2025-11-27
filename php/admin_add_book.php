@@ -10,49 +10,41 @@
 // ==================================================================
 
 include 'db_connect.php'; // 引入数据库连接配置
-$message = ""; // 用于存储操作反馈信息（成功或失败）
+$message = ""; // 用于存储操作反馈信息
 
-// ------------------------------------------------------------------
-// PHP 逻辑区：处理表单提交
-// ------------------------------------------------------------------
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // --- 1. 数据接收与清洗 ---
     // 使用 real_escape_string 防止 SQL 注入攻击
     $title          = $conn->real_escape_string($_POST['title']);
     $author         = $conn->real_escape_string($_POST['author']);
-    $price          = $_POST['price']; // 数字类型通常不需要转义，但在 SQL 中仍建议处理
+    $price          = $_POST['price'];
     $publisher      = $conn->real_escape_string($_POST['publisher']);
     $isbn           = $conn->real_escape_string($_POST['isbn']);
     $publish_date   = $_POST['publish_date'];
     $description    = $conn->real_escape_string($_POST['description']);
     
-    // 分类信息 (Parent & Sub Category)
     $parent_category = $conn->real_escape_string($_POST['parent_category']);
     $category       = $conn->real_escape_string($_POST['category']);
     
-    // 图片处理：如果用户没填，默认使用 'allknow.png'
+    // default: allknow.png
     $cover_image    = !empty($_POST['cover_image']) ? $conn->real_escape_string($_POST['cover_image']) : 'allknow.png';
     $sales_count    = 0; // 新书默认销量为 0
 
-    // 标签处理：获取管理员手动选择的标签 ('NEW', 'HOT', 'NONE' 或 'NULL')
+    // tag
     $manual_tag     = !empty($_POST['manual_tag']) ? $conn->real_escape_string($_POST['manual_tag']) : "NULL";
 
-    // --- 2. 构建 SQL 语句 ---
-    // 注意：如果 manual_tag 是字符串 "NULL"，在 SQL 中不应加引号，表示数据库的 NULL 值
     if ($manual_tag === "NULL") {
         $sql = "INSERT INTO books (title, author, price, publisher, isbn, parent_category, category, publish_date, description, cover_image, sales_count, manual_tag) 
                 VALUES ('$title', '$author', '$price', '$publisher', '$isbn', '$parent_category', '$category', '$publish_date', '$description', '$cover_image', '$sales_count', NULL)";
     } else {
-        // 如果有具体标签值，则作为字符串插入
         $sql = "INSERT INTO books (title, author, price, publisher, isbn, parent_category, category, publish_date, description, cover_image, sales_count, manual_tag) 
                 VALUES ('$title', '$author', '$price', '$publisher', '$isbn', '$parent_category', '$category', '$publish_date', '$description', '$cover_image', '$sales_count', '$manual_tag')";
     }
 
-    // --- 3. 执行查询并反馈 ---
     if ($conn->query($sql) === TRUE) {
-        $message = "✅ Book added successfully! <a href='homepage.php'>Go to Homepage</a>";
+        $message = " Book added successfully! <a href='homepage.php'>Go to Homepage</a>";
     } else {
-        $message = "❌ Error: " . $sql . "<br>" . $conn->error;
+        $message = " Error: " . $sql . "<br>" . $conn->error;
     }
 }
 ?>

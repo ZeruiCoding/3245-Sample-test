@@ -128,7 +128,7 @@ $display_hot = array_slice($best_sellers_list, 0, 5);
                 <?php if (!empty($display_new)) { foreach ($display_new as $row) {
                     // 动态图片路径
                     $img_file = !empty($row['cover_image']) ? $row['cover_image'] : 'allknow.png';
-                    $img_src = "../IMG/" . htmlspecialchars($img_file);
+                    $img_src = "../IMG/bookimg/" . htmlspecialchars($img_file);
                     // 数据准备
                     $desc = isset($row['description']) ? htmlspecialchars($row['description']) : "No description.";
                     $pub = isset($row['publisher']) ? htmlspecialchars($row['publisher']) : "Unknown";
@@ -157,7 +157,7 @@ $display_hot = array_slice($best_sellers_list, 0, 5);
                 <?php if (!empty($display_hot)) { foreach ($display_hot as $row) {
                     // 同样的动态逻辑
                     $img_file = !empty($row['cover_image']) ? $row['cover_image'] : 'allknow.png';
-                    $img_src = "../IMG/" . htmlspecialchars($img_file);
+                    $img_src = "../IMG/bookimg/" . htmlspecialchars($img_file);
                     $desc = isset($row['description']) ? htmlspecialchars($row['description']) : "No description.";
                     $pub = isset($row['publisher']) ? htmlspecialchars($row['publisher']) : "Unknown";
                     $isbn = isset($row['isbn']) ? htmlspecialchars($row['isbn']) : "N/A";
